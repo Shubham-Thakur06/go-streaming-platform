@@ -71,7 +71,7 @@ func CreateInitialHost(db *gorm.DB, hostConfig config.HostConfig) error {
 	}
 
 	// Hash the password
-	hashedPassword, err := HashPassword(hostConfig.Password)
+	hashedPassword, err := hashPassword(hostConfig.Password)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func CreateInitialHost(db *gorm.DB, hostConfig config.HostConfig) error {
 	return nil
 }
 
-func HashPassword(password string) (string, error) {
+func hashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", fmt.Errorf("failed to hash password: %w", err)
