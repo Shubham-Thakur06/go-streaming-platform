@@ -15,6 +15,32 @@ func New(db *database.DB) *Repository {
 	return &Repository{db: db}
 }
 
+type UserRepository struct {
+	*Repository
+}
+
+func NewUserRepository(repo *Repository) *UserRepository {
+	return &UserRepository{Repository: repo}
+}
+
+func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
+	var user models.User
+	err := r.db.Where("username = ?", username).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *UserRepository) FindByID(id string) (*models.User, error) {
+	var user models.User
+	err := r.db.Where("id = ?", id).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 type MediaRepository struct {
 	*Repository
 }

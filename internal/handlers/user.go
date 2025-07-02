@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Shubham-Thakur06/go-streaming-platform/internal/config"
+	"github.com/Shubham-Thakur06/go-streaming-platform/internal/middleware"
 	"github.com/Shubham-Thakur06/go-streaming-platform/internal/models"
 	"github.com/Shubham-Thakur06/go-streaming-platform/internal/service"
 	"github.com/gin-gonic/gin"
@@ -63,6 +64,64 @@ func (h *UserHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Login successful",
 		"token":   token,
+		"user": UserResponse{
+			ID:        user.ID,
+			Username:  user.Username,
+			Email:     user.Email,
+			CreatedAt: user.CreatedAt,
+		},
+	})
+}
+
+func (h *UserHandler) GetProfile(c *gin.Context) {
+	user := middleware.GetCurrentUser(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"user": UserResponse{
+			ID:        user.ID,
+			Username:  user.Username,
+			Email:     user.Email,
+			CreatedAt: user.CreatedAt,
+		},
+	})
+}
+
+func (h *UserHandler) UpdateProfile(c *gin.Context) {
+	user := middleware.GetCurrentUser(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+
+	var req struct {
+		Username string `json:"username"`
+		Email    string `json:"email" binding:"omitempty,email"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	updates := make(map[string]interface{})
+	if req.Username != "" {
+		updates["username"] = req.Username
+	}
+	if req.Email != "" {
+		updates["email"] = req.Email
+	}
+
+	if err := h.db.Model(&user).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update profile"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Profile updated successfully",
 		"user": UserResponse{
 			ID:        user.ID,
 			Username:  user.Username,

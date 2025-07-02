@@ -64,11 +64,11 @@ func ValidateToken(tokenString string, cfg config.JWTConfig) (*Claims, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse token: %w", err)
+		return nil, ErrUnauthorized
 	}
 
 	if !token.Valid {
-		return nil, fmt.Errorf("invalid token")
+		return nil, ErrUnauthorized
 	}
 
 	return claims, nil
