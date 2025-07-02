@@ -8,6 +8,7 @@ import (
 	"github.com/Shubham-Thakur06/go-streaming-platform/internal/middleware"
 	"github.com/Shubham-Thakur06/go-streaming-platform/internal/models"
 	"github.com/Shubham-Thakur06/go-streaming-platform/internal/service"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"

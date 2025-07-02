@@ -7,6 +7,7 @@ import (
 	"github.com/Shubham-Thakur06/go-streaming-platform/internal/config"
 	"github.com/Shubham-Thakur06/go-streaming-platform/internal/database"
 	"github.com/Shubham-Thakur06/go-streaming-platform/internal/handlers"
+	"github.com/Shubham-Thakur06/go-streaming-platform/internal/middleware"
 	"github.com/Shubham-Thakur06/go-streaming-platform/internal/storage"
 
 	"github.com/gin-gonic/gin"
@@ -59,6 +60,22 @@ func (s *Server) setupRoutes() {
 	public := s.router.Group("/api/v1")
 	{
 		public.POST("/auth/login", s.handlers.User.Login)
+		public.GET("/media", s.handlers.Media.ListMedia)
+		public.GET("/media/:id", s.handlers.Media.GetMedia)
+		public.GET("/media/:id/stream", s.handlers.Media.GetStreamURL)
+	}
+	
+	// Protected routes (host authentication required)
+	protected := s.router.Group("/api/v1")
+	protected.Use(middleware.AuthMiddleware(s.cfg.JWT, s.db.DB))
+	{
+		// Host routes
+		protected.GET("/profile", s.handlers.User.GetProfile)
+		protected.PUT("/profile", s.handlers.User.UpdateProfile)
+
+		// Media management (host only)
+		protected.POST("/media/upload", s.handlers.Media.UploadMedia)
+		protected.DELETE("/media/:id", s.handlers.Media.DeleteMedia)
 	}
 }
 
