@@ -55,6 +55,11 @@ func (s *Server) setupRoutes() {
 	s.router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+
+	public := s.router.Group("/api/v1")
+	{
+		public.POST("/auth/login", s.handlers.User.Login)
+	}
 }
 
 func (s *Server) Start() error {
