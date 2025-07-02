@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/Shubham-Thakur06/go-streaming-platform/internal/config"
 
@@ -39,14 +40,44 @@ func NewAWSProvider(cfg config.AWSConfig) (*AWSProvider, error) {
 }
 
 func (p *AWSProvider) UploadFile(file io.Reader, filename string, contentType string) (string, error) {
-	return "", nil
+	_, err := p.uploader.Upload(&s3manager.UploadInput{
+		Bucket:      aws.String(p.bucketName),
+		Key:         aws.String(filename),
+		Body:        file,
+		ContentType: aws.String(contentType),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to upload file to S3: %w", err)
+	}
+
+	return p.GetFileURL(filename)
 }
+
 func (p *AWSProvider) DeleteFile(filename string) error {
+	_, err := p.s3Client.DeleteObject(&s3.DeleteObjectInput{
+		Bucket: aws.String(p.bucketName),
+		Key:    aws.String(filename),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete file from S3: %w", err)
+	}
 	return nil
 }
+
 func (p *AWSProvider) GetFileURL(filename string) (string, error) {
-	return "", nil
+	return fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", p.bucketName, *p.s3Client.Config.Region, filename), nil
 }
+
 func (p *AWSProvider) GeneratePresignedURL(filename string, expiresIn int64) (string, error) {
-	return "", nil
+	req, _ := p.s3Client.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(p.bucketName),
+		Key:    aws.String(filename),
+	})
+
+	url, err := req.Presign(time.Duration(expiresIn) * time.Second)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate presigned URL: %w", err)
+	}
+
+	return url, nil
 }
