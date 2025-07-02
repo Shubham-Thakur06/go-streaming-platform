@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - DB_NAME=streaming_platform
+      - DB_SSLMODE=disable
+      - JWT_SECRET_KEY=your-secret-key-here
+      - JWT_EXPIRY_HOURS=24
+      - STORAGE_PROVIDER=aws
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_BUCKET_NAME=${AWS_BUCKET_NAME}
+      - HOST_USERNAME=host
+      - HOST_PASSWORD=host123
+      - HOST_EMAIL=host@streaming-platform.com
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - streaming-network
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=streaming_platform
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - streaming-network
+
+  # Optional: Redis for caching (uncomment if needed)
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - streaming-network
+
+volumes:
+  postgres_data:
+  # redis_data:
+
+networks:
+  streaming-network:
+    driver: bridge 
